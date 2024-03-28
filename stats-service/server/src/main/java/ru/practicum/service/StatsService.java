@@ -8,8 +8,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.dto.EndpointHitDto;
+import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.model.Hit;
-import ru.practicum.model.ViewStats;
 import ru.practicum.repository.StatsRepository;
 
 @Service
@@ -22,11 +22,11 @@ public class StatsService {
     statsRepository.saveAndFlush(hit);
   }
 
-  public List<ViewStats> find(
+  public List<ViewStatsDto> find(
       String startString, String endString, String[] uris, boolean unique) {
     LocalDateTime start = toLocalDateTime(startString);
     LocalDateTime end = toLocalDateTime(endString);
-    List<ViewStats> resultDtos;
+    List<ViewStatsDto> resultDtos;
 
     if (uris == null) {
       if (unique) {

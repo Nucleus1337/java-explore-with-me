@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.dto.EndpointHitDto;
-import ru.practicum.model.ViewStats;
+import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.service.StatsService;
 
 @RestController
@@ -32,11 +32,13 @@ public class StatsController {
   }
 
   @GetMapping("/stats")
-  public List<ViewStats> getStats(
+  public List<ViewStatsDto> getStats(
       @RequestParam String start,
       @RequestParam String end,
       @RequestParam(required = false) String[] uris,
       @RequestParam(defaultValue = "false") boolean unique) {
+    log.info("GET /stats: start={}, end={}, uris={}, unique={}", start, end, uris, unique);
+
     return statsService.find(start, end, uris, unique);
   }
 }
