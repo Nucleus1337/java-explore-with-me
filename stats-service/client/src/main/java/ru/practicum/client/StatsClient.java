@@ -1,64 +1,38 @@
 package ru.practicum.client;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
-import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.util.DefaultUriBuilderFactory;
+import ru.practicum.dto.EndpointHitDto;
 
-public class StatsClient {
-    protected final RestTemplate rest;
+public class StatsClient extends BaseClient {
 
-    public StatsClient(RestTemplate rest) {
-        this.rest = rest;
-    }
+  public StatsClient(@Value("${stats-server.url}") String serverUrl, RestTemplateBuilder builder) {
+    super(
+        builder
+            .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
+            .requestFactory(HttpComponentsClientHttpRequestFactory::new)
+            .build());
+  }
 
-    private <T> ResponseEntity<Object> makeAndSendRequest(
-            HttpMethod method,
-            String path,
-            Long userId,
-            @Nullable Map<String, Object> parameters,
-            @Nullable T body) {
-        HttpEntity<T> requestEntity = new HttpEntity<>(body, defaultHeaders(userId));
+  public ResponseEntity<Object> addHit(EndpointHitDto endpointHitDto) {
+    return post("/hit", endpointHitDto);
+  }
 
-        ResponseEntity<Object> shareitServerResponse;
-        try {
-            if (parameters != null) {
-                shareitServerResponse =
-                        rest.exchange(path, method, requestEntity, Object.class, parameters);
-            } else {
-                shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class);
-            }
-        } catch (HttpStatusCodeException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
-        }
-        return prepareGatewayResponse(shareitServerResponse);
-    }
+  public ResponseEntity<Object> findStatisticsForUris(
+      String start, String end, String[] uris, boolean unique) {
+    Map<String, Object> parameters =
+        Map.of("start", start, "end", end, "uris", uris, "unique", unique);
 
-    private HttpHeaders defaultHeaders(Long userId) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-        return headers;
-    }
+    return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
+  }
 
-    private static ResponseEntity<Object> prepareGatewayResponse(ResponseEntity<Object> response) {
-        if (response.getStatusCode().is2xxSuccessful()) {
-            return response;
-        }
+  public ResponseEntity<Object> findStatisticsForAll(String start, String end, boolean unique) {
+    Map<String, Object> parameters = Map.of("start", start, "end", end, "unique", unique);
 
-        ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.status(response.getStatusCode());
-
-        if (response.hasBody()) {
-            return responseBuilder.body(response.getBody());
-        }
-
-        return responseBuilder.build();
-    }
+    return get("/stats?start={start}&end={end}&unique={unique}", parameters);
+  }
 }
