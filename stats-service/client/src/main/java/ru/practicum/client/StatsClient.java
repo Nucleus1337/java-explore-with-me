@@ -22,15 +22,19 @@ public class StatsClient extends BaseClient {
     return post("/hit", endpointHitDto);
   }
 
-  public ResponseEntity<Object> findStatisticsForUris(
+  public ResponseEntity<Object> findStatistics(
       String start, String end, String[] uris, boolean unique) {
-    Map<String, Object> parameters =
-        Map.of("start", start, "end", end, "uris", uris, "unique", unique);
+    if (uris == null) {
+      return findStatisticsForAll(start, end, unique);
+    } else {
+      Map<String, Object> parameters =
+          Map.of("start", start, "end", end, "uris", uris, "unique", unique);
 
-    return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
+      return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
+    }
   }
 
-  public ResponseEntity<Object> findStatisticsForAll(String start, String end, boolean unique) {
+  private ResponseEntity<Object> findStatisticsForAll(String start, String end, boolean unique) {
     Map<String, Object> parameters = Map.of("start", start, "end", end, "unique", unique);
 
     return get("/stats?start={start}&end={end}&unique={unique}", parameters);
