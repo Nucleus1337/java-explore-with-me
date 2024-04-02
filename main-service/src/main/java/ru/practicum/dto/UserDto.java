@@ -1,13 +1,15 @@
-package ru.practicum.admin.dto;
+package ru.practicum.dto;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class NewUserDto {
+@Builder
+public class UserDto {
   private Long id;
 
   @NotBlank(message = "Field: name. Error: must not be blank. Value: null")

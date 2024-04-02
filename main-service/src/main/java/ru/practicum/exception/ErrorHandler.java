@@ -1,9 +1,9 @@
 package ru.practicum.exception;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -16,22 +16,19 @@ import ru.practicum.util.DateUtil;
 @Slf4j
 public class ErrorHandler {
 
-  @ExceptionHandler({MethodArgumentNotValidException.class})
+  @ExceptionHandler({MethodArgumentNotValidException.class, CustomException.UserException.class})
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
-  ErrorResponse getBadRequestExceptionResponse(MethodArgumentNotValidException e) {
+  ErrorResponse getBadRequestExceptionResponse(RuntimeException e) {
     log.error("Bad reqeust: {}", e.getMessage());
     return new ErrorResponse(
         "BAD_REQUEST",
         "Incorrectly made request.",
-        Objects.requireNonNull(e.getBindingResult().getFieldError()).getDefaultMessage(),
+        e.getLocalizedMessage(),
         DateUtil.toString(LocalDateTime.now()));
   }
 
-  @ExceptionHandler({
-    /*DataIntegrityViolationException.class, */
-    ConstraintViolationException.class
-  })
+  @ExceptionHandler({DataIntegrityViolationException.class, ConstraintViolationException.class})
   @ResponseStatus(HttpStatus.CONFLICT)
   @ResponseBody
   ErrorResponse getConflictExceptionResponse(Exception e) {
@@ -46,14 +43,15 @@ public class ErrorHandler {
 
   @ExceptionHandler({
     CustomException.UserNotFoundException.class,
+    CustomException.CategoryNotFoundException.class
   })
   @ResponseStatus(HttpStatus.NOT_FOUND)
   @ResponseBody
-  ErrorResponse getNotFoundExceptionResponse(RuntimeException e) {
+  ErrorResponse getNotFoundExceptionResponse(Exception e) {
     log.error("Not found: {}", e.getMessage());
     return new ErrorResponse(
         "NOT_FOUND",
-        "Object not found.",
+        "The required object was not found.",
         e.getLocalizedMessage(),
         DateUtil.toString(LocalDateTime.now()));
   }

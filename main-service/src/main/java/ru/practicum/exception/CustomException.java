@@ -12,4 +12,16 @@ public class CustomException {
       super(message);
     }
   }
+
+  public static class CategoryException extends RuntimeException {
+    public CategoryException(String message) {
+      super(message);
+    }
+  }
+
+  public static class CategoryNotFoundException extends CategoryException {
+    public CategoryNotFoundException(String message) {
+      super(message);
+    }
+  }
 }
