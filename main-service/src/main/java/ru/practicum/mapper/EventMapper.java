@@ -2,13 +2,15 @@ package ru.practicum.mapper;
 
 import static ru.practicum.mapper.CategoryMapper.toDto;
 import static ru.practicum.mapper.UserMapper.toShortDto;
+import static ru.practicum.util.DateUtil.toLocalDateTime;
 
 import java.time.LocalDateTime;
 import lombok.experimental.UtilityClass;
 import ru.practicum.dto.CategoryDto;
-import ru.practicum.dto.EventRequestDto;
-import ru.practicum.dto.EventResponseDto;
+import ru.practicum.dto.EventFullDto;
+import ru.practicum.dto.EventShortDto;
 import ru.practicum.dto.Location;
+import ru.practicum.dto.NewEventDto;
 import ru.practicum.dto.UserShortDto;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
@@ -18,30 +20,30 @@ import ru.practicum.util.DateUtil;
 
 @UtilityClass
 public class EventMapper {
-  public static Event toModel(EventRequestDto eventRequestDto, Category category, User user) {
+  public static Event toModel(NewEventDto newEventDto, Category category, User user) {
     return Event.builder()
-        .annotation(eventRequestDto.getAnnotation())
+        .annotation(newEventDto.getAnnotation())
         .category(category)
-        .description(eventRequestDto.getDescription())
-        .eventDate(eventRequestDto.getEventDate())
-        .lat((Float) eventRequestDto.getLocation().get("lat"))
-        .lon((Float) eventRequestDto.getLocation().get("lon"))
-        .paid(eventRequestDto.getPaid())
-        .participantLimit(eventRequestDto.getParticipantLimit())
-        .requestModeration(eventRequestDto.getRequestModeration())
-        .title(eventRequestDto.getTitle())
+        .description(newEventDto.getDescription())
+        .eventDate(toLocalDateTime(newEventDto.getEventDate()))
+        .lat((Double) newEventDto.getLocation().get("lat"))
+        .lon((Double) newEventDto.getLocation().get("lon"))
+        .paid(newEventDto.getPaid())
+        .participantLimit(newEventDto.getParticipantLimit())
+        .requestModeration(newEventDto.getRequestModeration())
+        .title(newEventDto.getTitle())
         .created(LocalDateTime.now())
         .user(user)
         .state(EventState.PENDING)
         .build();
   }
 
-  public static EventResponseDto toResponseDto(Event event, Category category, User user) {
-    UserShortDto userShortDto = toShortDto(user);
-    CategoryDto categoryDto = toDto(category);
+  public static EventFullDto toResponseFullDto(Event event) {
+    UserShortDto userShortDto = toShortDto(event.getUser());
+    CategoryDto categoryDto = toDto(event.getCategory());
     Location location = Location.builder().lat(event.getLat()).lon(event.getLon()).build();
 
-    return EventResponseDto.builder()
+    return EventFullDto.builder()
         .annotation(event.getAnnotation())
         .category(categoryDto)
         .confirmedRequests(0L) // TODO: получать и прокидывать сюда подтвержденные запросы
@@ -55,6 +57,22 @@ public class EventMapper {
         .participantLimit(event.getParticipantLimit())
         .publishedOn(DateUtil.toString(event.getPublished()))
         .state(event.getState().toString())
+        .title(event.getTitle())
+        .views(0L) // TODO: по всей видимости сюда надо будет передавать статистику из stats-server
+        .build();
+  }
+
+  public static EventShortDto toResponseShortDto(Event event) {
+    CategoryDto categoryDto = toDto(event.getCategory());
+    UserShortDto userShortDto = toShortDto(event.getUser());
+
+    return EventShortDto.builder()
+        .annotation(event.getAnnotation())
+        .category(categoryDto)
+        .confirmedRequests(0L) // TODO: получать и прокидывать сюда подтвержденные запросы
+        .eventDate(DateUtil.toString(event.getEventDate()))
+        .initiator(userShortDto)
+        .paid(event.getPaid())
         .title(event.getTitle())
         .views(0L) // TODO: по всей видимости сюда надо будет передавать статистику из stats-server
         .build();

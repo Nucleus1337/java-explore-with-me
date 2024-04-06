@@ -3,7 +3,10 @@ package ru.practicum.service;
 import static ru.practicum.mapper.CategoryMapper.toDto;
 import static ru.practicum.mapper.CategoryMapper.toModel;
 
+import java.util.Collections;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,5 +52,13 @@ public class CategoryService {
     category.setName(categoryDto.getName());
 
     return toDto(categoryRepository.saveAndFlush(category));
+  }
+
+  public List<CategoryDto> findAllCategories(Pageable pageable) {
+    return categoryRepository.findAllCategories(pageable).orElseGet(Collections::emptyList);
+  }
+
+  public CategoryDto findCategoryById(Long catId) {
+    return toDto(getCategory(catId));
   }
 }

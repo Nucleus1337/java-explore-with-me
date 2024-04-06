@@ -1,9 +1,8 @@
 package ru.practicum.util;
 
-import lombok.experimental.UtilityClass;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class DateUtil {
@@ -20,6 +19,10 @@ public class DateUtil {
   }
 
   public static String toString(LocalDateTime localDateTime) {
+    if (localDateTime == null) {
+      return null;
+    }
+
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern(OVER_ISO_DATE_TIME);
     return localDateTime.format(formatter);
   }

@@ -1,19 +1,30 @@
 package ru.practicum.controller;
 
+import static ru.practicum.util.Utils.getPageable;
+
+import java.util.List;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.dto.EventRequestDto;
-import ru.practicum.dto.EventResponseDto;
+import ru.practicum.dto.EventFullDto;
+import ru.practicum.dto.EventRequestStatusUpdateRequestDto;
+import ru.practicum.dto.EventRequestStatusUpdateResultDto;
+import ru.practicum.dto.EventShortDto;
+import ru.practicum.dto.NewEventDto;
+import ru.practicum.dto.ParticipationRequestDto;
+import ru.practicum.dto.UpdateEventUserRequestDto;
 import ru.practicum.service.EventService;
-
-import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/users")
@@ -24,10 +35,60 @@ public class PrivateController {
 
   @PostMapping("/{userId}/events")
   @ResponseStatus(HttpStatus.CREATED)
-  public EventResponseDto createEvent(
-      @RequestBody @Valid EventRequestDto eventRequestDto, @PathVariable Long userId) {
-    log.info("POST /{userId}/events: eventRequestDto={}, userId={}", eventRequestDto, userId);
+  public EventFullDto createEvent(
+      @RequestBody @Valid NewEventDto newEventDto, @PathVariable Long userId) {
+    log.info("POST /{userId}/events: eventRequestDto={}, userId={}", newEventDto, userId);
 
-    return eventService.createEvent(eventRequestDto, userId);
+    return eventService.createEvent(newEventDto, userId);
+  }
+
+  @GetMapping("/{userId}/events")
+  public List<EventShortDto> findUserEvents(
+      @PathVariable Long userId,
+      @RequestParam(defaultValue = "0") Integer from,
+      @RequestParam(defaultValue = "10") Integer size) {
+    log.info("GET /{userId}/events: userId={}, from={}, size={}", userId, from, size);
+    Pageable pageable = getPageable(from, size);
+
+    return eventService.findUserEvents(userId, pageable);
+  }
+
+  @GetMapping("/{userId}/events/{eventId}")
+  public EventFullDto findUserEvent(@PathVariable Long userId, @PathVariable Long eventId) {
+    log.info("GET /{userId}/events/{eventId}: userId={}, eventId={}", userId, eventId);
+
+    return eventService.findUserEvent(userId, eventId);
+  }
+
+  @PatchMapping("/{userId}/events/{eventId}")
+  public EventFullDto updateUserEvent(
+      @PathVariable Long userId,
+      @PathVariable Long eventId,
+      @RequestBody @Valid UpdateEventUserRequestDto updateDto) {
+    log.info("PATCH /{userId}/events/{eventId}: userId={}, eventId={}", userId, eventId);
+
+    return eventService.updateUserEvent(userId, eventId, updateDto);
+  }
+
+  @GetMapping("/{userId}/events/{eventId}/requests")
+  public List<ParticipationRequestDto> findRequests(
+      @PathVariable Long userId, @PathVariable Long eventId) {
+    log.info("GET /{userId}/events/{eventId}/requests: userId={}, eventId={}", userId, eventId);
+    // TODO: this
+    return null;
+  }
+
+  @PatchMapping("/{userId}/events/{eventId}/requests")
+  public EventRequestStatusUpdateResultDto updateRequestStatuses(
+      @PathVariable Long userId,
+      @PathVariable Long eventId,
+      @RequestBody EventRequestStatusUpdateRequestDto updateDto) {
+    log.info(
+        "PATCH /{userId}/events/{eventId}/requests: userId={}, eventId={}, updateDto={}",
+        userId,
+        eventId,
+        updateDto);
+//    TODO: this
+    return null;
   }
 }

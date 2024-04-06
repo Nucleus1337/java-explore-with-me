@@ -2,7 +2,6 @@ package ru.practicum.dto;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
-import java.time.LocalDateTime;
 import java.util.Map;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
@@ -11,12 +10,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
-import org.springframework.format.annotation.DateTimeFormat;
+import ru.practicum.annotation.AtLeastTwoHoursBeforeStart;
 
 @Data
 @AllArgsConstructor
 @Builder
-public class EventRequestDto {
+public class NewEventDto {
   @NotBlank
   @Length(min = 20, max = 2000)
   private String annotation;
@@ -27,9 +26,9 @@ public class EventRequestDto {
   @Length(min = 20, max = 7000)
   private String description;
 
-  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  // TODO: сделать аннатацию, для проверки, что currentDateTime + 2H <= eventDate
-  private LocalDateTime eventDate;
+  @NotBlank
+  @AtLeastTwoHoursBeforeStart
+  private String eventDate;
 
   @NotEmpty private Map<String, Object> location;
 

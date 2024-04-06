@@ -39,8 +39,8 @@ public class Event {
 
   private String description;
   private LocalDateTime eventDate;
-  private Float lat;
-  private Float lon;
+  private Double lat;
+  private Double lon;
   private Boolean paid;
   private Integer participantLimit;
   private Boolean requestModeration;
@@ -55,4 +55,8 @@ public class Event {
 
   @Enumerated(EnumType.STRING)
   private EventState state;
+
+  @ManyToOne(targetEntity = Compilation.class, fetch = FetchType.LAZY)
+  @JoinColumn(name = "compilation_id")
+  private Compilation compilation;
 }
