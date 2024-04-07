@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -59,7 +60,12 @@ public class ErrorHandler {
         DateUtil.toString(LocalDateTime.now()));
   }
 
-  @ExceptionHandler({CustomException.UserException.class, IllegalStateException.class})
+  @ExceptionHandler({
+    CustomException.UserException.class,
+    CustomException.CategoryException.class,
+    IllegalStateException.class,
+    MissingServletRequestParameterException.class
+  })
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
   ErrorResponse getBadRequestExceptionResponse(Exception e) {
@@ -71,7 +77,11 @@ public class ErrorHandler {
         DateUtil.toString(LocalDateTime.now()));
   }
 
-  @ExceptionHandler({DataIntegrityViolationException.class, ConstraintViolationException.class})
+  @ExceptionHandler({
+    DataIntegrityViolationException.class,
+    ConstraintViolationException.class,
+    CustomException.ParticipantRequestConflictException.class
+  })
   @ResponseStatus(HttpStatus.CONFLICT)
   @ResponseBody
   ErrorResponse getConflictExceptionResponse(Exception e) {

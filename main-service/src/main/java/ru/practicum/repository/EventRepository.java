@@ -16,6 +16,9 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
   List<Event> findByCompilation(Compilation compilation);
 
+  @Query("select e from Event e where e.compilation in ?1")
+  List<Event> findAllByCompilation(List<Compilation> compilations);
+
   List<Event> findAllById(Long[] ids);
 
   @Modifying

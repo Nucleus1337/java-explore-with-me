@@ -30,7 +30,7 @@ public class UserService {
     return toDto(userRepository.saveAndFlush(user));
   }
 
-  public List<UserDto> findUsers(Integer[] ids, Pageable pageable) {
+  public List<UserDto> findUsers(List<Long> ids, Pageable pageable) {
     if (ids == null) {
       return userRepository.findAll(pageable).stream()
           .map(UserMapper::toDto)

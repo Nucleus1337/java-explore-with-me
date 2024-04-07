@@ -38,7 +38,7 @@ public class EventMapper {
         .build();
   }
 
-  public static EventFullDto toResponseFullDto(Event event) {
+  public static EventFullDto toResponseFullDto(Event event, Long confirmedRequestsCount) {
     UserShortDto userShortDto = toShortDto(event.getUser());
     CategoryDto categoryDto = toDto(event.getCategory());
     Location location = Location.builder().lat(event.getLat()).lon(event.getLon()).build();
@@ -46,7 +46,7 @@ public class EventMapper {
     return EventFullDto.builder()
         .annotation(event.getAnnotation())
         .category(categoryDto)
-        .confirmedRequests(0L) // TODO: получать и прокидывать сюда подтвержденные запросы
+        .confirmedRequests(confirmedRequestsCount)
         .createdOn(DateUtil.toString(event.getCreated()))
         .description(event.getDescription())
         .eventDate(DateUtil.toString(event.getEventDate()))
@@ -62,14 +62,14 @@ public class EventMapper {
         .build();
   }
 
-  public static EventShortDto toResponseShortDto(Event event) {
+  public static EventShortDto toResponseShortDto(Event event, Long confirmedRequestsCount) {
     CategoryDto categoryDto = toDto(event.getCategory());
     UserShortDto userShortDto = toShortDto(event.getUser());
 
     return EventShortDto.builder()
         .annotation(event.getAnnotation())
         .category(categoryDto)
-        .confirmedRequests(0L) // TODO: получать и прокидывать сюда подтвержденные запросы
+        .confirmedRequests(confirmedRequestsCount)
         .eventDate(DateUtil.toString(event.getEventDate()))
         .initiator(userShortDto)
         .paid(event.getPaid())

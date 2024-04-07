@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.dto.CategoryDto;
 import ru.practicum.dto.CompilationDto;
 import ru.practicum.dto.NewCompilationDto;
+import ru.practicum.dto.UpdateCompilationRequestDto;
 import ru.practicum.dto.UserDto;
 import ru.practicum.service.CategoryService;
 import ru.practicum.service.CompilationService;
@@ -46,7 +47,7 @@ public class AdminController {
 
   @GetMapping("/users")
   public List<UserDto> findUsers(
-      @RequestParam(required = false) Integer[] ids,
+      @RequestParam(required = false) List<Long> ids,
       @RequestParam(required = false, defaultValue = "0") Integer from,
       @RequestParam(required = false, defaultValue = "10") Integer size) {
     log.info("GET /admin/users: ids={}, from={}, size={}", ids, from, size);
@@ -98,6 +99,18 @@ public class AdminController {
   public ResponseEntity<Object> removeCompilation(@RequestParam Long compId) {
     log.info("DELETE /compilation/{compId}: compId={}", compId);
 
-    return null;
+    return compilationService.deleteCompilation(compId);
+  }
+
+  @PatchMapping("/compilation/{compId}")
+  public CompilationDto updateCompilation(
+      @RequestBody @Valid UpdateCompilationRequestDto compilationUpdateDto,
+      @PathVariable Long compId) {
+    log.info(
+        "PATCH /compilation/{compId}: compilationUpdateDto={}, compId={}",
+        compilationUpdateDto,
+        compId);
+
+    return compilationService.updateCompilation(compilationUpdateDto, compId);
   }
 }

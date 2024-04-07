@@ -1,15 +1,15 @@
 package ru.practicum.dto;
 
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
 import java.util.Map;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.beans.factory.annotation.Value;
 import ru.practicum.annotation.AtLeastTwoHoursBeforeStart;
 
 @Data
@@ -32,13 +32,14 @@ public class NewEventDto {
 
   @NotEmpty private Map<String, Object> location;
 
-  @JsonSetter(nulls = Nulls.SKIP)
+  @Value("false")
   private Boolean paid = false;
 
-  @JsonSetter(nulls = Nulls.SKIP)
-  private Integer participantLimit = 0;
+  @Value("0")
+  @Positive
+  private Long participantLimit = 0L;
 
-  @JsonSetter(nulls = Nulls.SKIP)
+  @Value("true")
   private Boolean requestModeration = true;
 
   @NotBlank

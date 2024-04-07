@@ -25,6 +25,7 @@ import ru.practicum.dto.NewEventDto;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.dto.UpdateEventUserRequestDto;
 import ru.practicum.service.EventService;
+import ru.practicum.service.ParticipationRequestService;
 
 @RestController
 @RequestMapping("/users")
@@ -32,6 +33,7 @@ import ru.practicum.service.EventService;
 @RequiredArgsConstructor
 public class PrivateController {
   private final EventService eventService;
+  private final ParticipationRequestService participationRequestService;
 
   @PostMapping("/{userId}/events")
   @ResponseStatus(HttpStatus.CREATED)
@@ -90,5 +92,20 @@ public class PrivateController {
         updateDto);
 //    TODO: this
     return null;
+  }
+
+  @PostMapping("/{userId}/requests")
+  @ResponseStatus(HttpStatus.CREATED)
+  public ParticipationRequestDto createParticipationRequest(@PathVariable Long userId, @RequestParam Long eventId) {
+    log.info("POST /{userId}/requests: userId={}, eventId={}", userId, eventId);
+
+    return participationRequestService.createParticipationRequest(userId, eventId);
+  }
+
+  @PatchMapping("/{userId}/requests/{requestId}/cancel")
+  public ParticipationRequestDto cancelParticipantRequest(@PathVariable Long userId, @PathVariable Long requestId) {
+    log.info("PATCH /{userId}/requests/{requestId}/cancel: userId={}, requestId={}", userId, requestId);
+
+    return participationRequestService.cancelParticipantRequest(userId, requestId);
   }
 }

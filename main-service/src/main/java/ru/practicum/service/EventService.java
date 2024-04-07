@@ -18,9 +18,11 @@ import ru.practicum.exception.CustomException;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
+import ru.practicum.model.ParticipationRequest;
 import ru.practicum.model.User;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.repository.ParticipationRequestRepository;
 import ru.practicum.repository.UserRepository;
 
 @Service
@@ -29,6 +31,7 @@ public class EventService {
   private final EventRepository eventRepository;
   private final UserRepository userRepository;
   private final CategoryRepository categoryRepository;
+  private final ParticipationRequestRepository participationRequestRepository;
 
   private User getUser(Long userId) {
     return userRepository
@@ -57,6 +60,14 @@ public class EventService {
                     String.format("Event with id=%s was not found", eventId)));
   }
 
+  private Long getParticipationRequestCountByEventId(Long eventId) {
+    return participationRequestRepository.countByEventId(eventId);
+  }
+
+  private Long getParticipationRequestCountByEvent(Event event) {
+    return participationRequestRepository.countByEvent(event);
+  }
+
   private void checkIsUserOwner(Event event, Long userId) {
     if (!event.getUser().getId().equals(userId)) {
       throw new CustomException.UserException(
@@ -70,32 +81,41 @@ public class EventService {
 
     Event event = toModel(newEventDto, category, user);
 
-    return toResponseFullDto(eventRepository.saveAndFlush(event));
+    return toResponseFullDto(eventRepository.saveAndFlush(event), 0L);
   }
 
   public List<EventShortDto> findUserEvents(Long userId, Pageable pageable) {
     User user = getUser(userId);
 
-    List<Event> events = eventRepository.findByUser(user, pageable).orElseGet(Collections::emptyList);
+    List<Event> events =
+        eventRepository.findByUser(user, pageable).orElseGet(Collections::emptyList);
+    List<ParticipationRequest> requests = participationRequestRepository.findAllByEvent(events);
 
-    return events.stream().map(EventMapper::toResponseShortDto).collect(Collectors.toList());
+    return events.stream()
+        .map(
+            event -> {
+              Long count =
+                  requests.stream().filter(request -> request.getEvent().equals(event)).count();
+              return EventMapper.toResponseShortDto(event, count);
+            })
+        .collect(Collectors.toList());
   }
 
   public EventFullDto findUserEvent(Long userId, Long eventId) {
     Event event = getEvent(eventId);
+    Long confirmedRequestsCount = getParticipationRequestCountByEvent(event);
 
     checkIsUserOwner(event, userId);
 
-    return toResponseFullDto(event);
+    return toResponseFullDto(event, confirmedRequestsCount);
   }
 
   public EventFullDto updateUserEvent(
       Long userId, Long eventId, UpdateEventUserRequestDto updateDto) {
     Event event = getEvent(eventId);
+    Long confirmedRequestsCount = getParticipationRequestCountByEvent(event);
 
     checkIsUserOwner(event, userId);
-
-    Category category = getCategory(updateDto.getCategory());
 
     if (updateDto.getAnnotation() != null) {
       event.setAnnotation(updateDto.getAnnotation());
@@ -115,6 +135,7 @@ public class EventService {
       }
     }
     if (updateDto.getCategory() != null) {
+      Category category = getCategory(updateDto.getCategory());
       event.setCategory(category);
     }
     if (!updateDto.getEventDate().isBlank()) {
@@ -132,8 +153,6 @@ public class EventService {
 
     eventRepository.saveAndFlush(event);
 
-    return toResponseFullDto(event);
+    return toResponseFullDto(event, confirmedRequestsCount);
   }
-
-
 }

@@ -42,7 +42,7 @@ public class Event {
   private Double lat;
   private Double lon;
   private Boolean paid;
-  private Integer participantLimit;
+  private Long participantLimit;
   private Boolean requestModeration;
   private String title;
   private LocalDateTime created;

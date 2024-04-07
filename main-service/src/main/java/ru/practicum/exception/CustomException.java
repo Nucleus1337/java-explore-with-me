@@ -40,4 +40,34 @@ public class CustomException {
       super(message);
     }
   }
+
+  public static class CompilationException extends RuntimeException {
+    public CompilationException(String message) {
+      super(message);
+    }
+  }
+
+  public static class CompilationNotFoundException extends CompilationException {
+    public CompilationNotFoundException(String message) {
+      super(message);
+    }
+  }
+
+  public static class ParticipantRequestException extends RuntimeException {
+    public ParticipantRequestException(String message) {
+      super(message);
+    }
+  }
+
+  public static class ParticipantRequestConflictException extends ParticipantRequestException {
+    public ParticipantRequestConflictException(String message) {
+      super(message);
+    }
+  }
+
+  public static class ParticipantRequestNotFoundException extends ParticipantRequestException {
+    public ParticipantRequestNotFoundException(String message) {
+      super(message);
+    }
+  }
 }

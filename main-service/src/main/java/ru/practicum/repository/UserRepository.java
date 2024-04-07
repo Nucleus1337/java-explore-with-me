@@ -15,6 +15,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
   @Query(
       "select new ru.practicum.dto.UserDto(u.id, u.name, u.email)"
           + "from User u "
-          + "where u.id in :ids")
-  Optional<List<UserDto>> findUsersByIds(@Param("ids") Integer[] ids);
+          + "where u.id in (:ids)")
+  Optional<List<UserDto>> findUsersByIds(@Param("ids") List<Long> ids);
 }
