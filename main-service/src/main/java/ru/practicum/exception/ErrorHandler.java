@@ -1,9 +1,7 @@
 package ru.practicum.exception;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -19,18 +17,6 @@ import ru.practicum.util.DateUtil;
 @ControllerAdvice
 @Slf4j
 public class ErrorHandler {
-  private final Set<String> forbiddenAnnotations =
-      new HashSet<>() {
-        {
-          add("AtLeastTwoHoursBeforeStart");
-        }
-      };
-
-  private ErrorResponse getErrorResponse(
-      String status, String statusDescription, String errorMessage) {
-    return new ErrorResponse(
-        status, statusDescription, errorMessage, DateUtil.toString(LocalDateTime.now()));
-  }
 
   @ExceptionHandler({MethodArgumentNotValidException.class})
   @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -38,24 +24,9 @@ public class ErrorHandler {
   ErrorResponse getBadRequestExceptionResponse(MethodArgumentNotValidException e) {
     log.error("Bad request: {}", e.getMessage());
 
-    String status;
-    String statusDescription;
-
-    /*TODO: все таки тут надо делать кастомную ошибку.
-     *  использовать у ошибки ResponseStatus аннотацию*/
-    if (forbiddenAnnotations.contains(
-        (Objects.requireNonNull(
-            Objects.requireNonNull(e.getBindingResult().getFieldError()).getCode())))) {
-      status = "FORBIDDEN";
-      statusDescription = "For the requested operation the conditions are not met.";
-    } else {
-      status = "BAD_REQUEST";
-      statusDescription = "Incorrectly made request.";
-    }
-
     return new ErrorResponse(
-        status,
-        statusDescription,
+        "BAD_REQUEST",
+        "Incorrectly made request.",
         Objects.requireNonNull(e.getBindingResult().getFieldError()).getDefaultMessage(),
         DateUtil.toString(LocalDateTime.now()));
   }

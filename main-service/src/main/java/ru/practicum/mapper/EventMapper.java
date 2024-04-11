@@ -14,8 +14,8 @@ import ru.practicum.dto.NewEventDto;
 import ru.practicum.dto.UserShortDto;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
-import ru.practicum.model.EventState;
 import ru.practicum.model.User;
+import ru.practicum.model.enums.EventState;
 import ru.practicum.util.DateUtil;
 
 @UtilityClass
@@ -38,7 +38,8 @@ public class EventMapper {
         .build();
   }
 
-  public static EventFullDto toResponseFullDto(Event event, Long confirmedRequestsCount) {
+  public static EventFullDto toResponseFullDto(
+      Event event, Long confirmedRequestsCount, Long viewsStatistics) {
     UserShortDto userShortDto = toShortDto(event.getUser());
     CategoryDto categoryDto = toDto(event.getCategory());
     Location location = Location.builder().lat(event.getLat()).lon(event.getLon()).build();
@@ -58,11 +59,12 @@ public class EventMapper {
         .publishedOn(DateUtil.toString(event.getPublished()))
         .state(event.getState().toString())
         .title(event.getTitle())
-        .views(0L) // TODO: по всей видимости сюда надо будет передавать статистику из stats-server
+        .views(viewsStatistics)
         .build();
   }
 
-  public static EventShortDto toResponseShortDto(Event event, Long confirmedRequestsCount) {
+  public static EventShortDto toResponseShortDto(
+      Event event, Long confirmedRequestsCount, Long viewsStatistics) {
     CategoryDto categoryDto = toDto(event.getCategory());
     UserShortDto userShortDto = toShortDto(event.getUser());
 
@@ -74,7 +76,7 @@ public class EventMapper {
         .initiator(userShortDto)
         .paid(event.getPaid())
         .title(event.getTitle())
-        .views(0L) // TODO: по всей видимости сюда надо будет передавать статистику из stats-server
+        .views(viewsStatistics)
         .build();
   }
 }

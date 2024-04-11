@@ -1,5 +1,7 @@
 package ru.practicum.controller;
 
+import static ru.practicum.model.enums.ParticipationRequestStatus.PENDING;
+import static ru.practicum.model.enums.ParticipationRequestStatus.findByValue;
 import static ru.practicum.util.Utils.getPageable;
 
 import java.util.List;
@@ -24,6 +26,7 @@ import ru.practicum.dto.EventShortDto;
 import ru.practicum.dto.NewEventDto;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.dto.UpdateEventUserRequestDto;
+import ru.practicum.exception.CustomException;
 import ru.practicum.service.EventService;
 import ru.practicum.service.ParticipationRequestService;
 
@@ -69,15 +72,15 @@ public class PrivateController {
       @RequestBody @Valid UpdateEventUserRequestDto updateDto) {
     log.info("PATCH /{userId}/events/{eventId}: userId={}, eventId={}", userId, eventId);
 
-    return eventService.updateUserEvent(userId, eventId, updateDto);
+    return eventService.updateEventByOwner(userId, eventId, updateDto);
   }
 
   @GetMapping("/{userId}/events/{eventId}/requests")
   public List<ParticipationRequestDto> findRequests(
       @PathVariable Long userId, @PathVariable Long eventId) {
     log.info("GET /{userId}/events/{eventId}/requests: userId={}, eventId={}", userId, eventId);
-    // TODO: this
-    return null;
+
+    return participationRequestService.findAllParticipationRequestOnMyEventId(userId, eventId);
   }
 
   @PatchMapping("/{userId}/events/{eventId}/requests")
@@ -90,21 +93,28 @@ public class PrivateController {
         userId,
         eventId,
         updateDto);
-//    TODO: this
-    return null;
+    if (findByValue(updateDto.getStatus()) == null
+        && findByValue(updateDto.getStatus()).equals(PENDING)) {
+      throw new CustomException.ParticipantRequestException("Неверный статус");
+    }
+    return participationRequestService.changeStatusToPendingRequests(
+        userId, eventId, updateDto.getRequestIds(), updateDto.getStatus());
   }
 
   @PostMapping("/{userId}/requests")
   @ResponseStatus(HttpStatus.CREATED)
-  public ParticipationRequestDto createParticipationRequest(@PathVariable Long userId, @RequestParam Long eventId) {
+  public ParticipationRequestDto createParticipationRequest(
+      @PathVariable Long userId, @RequestParam Long eventId) {
     log.info("POST /{userId}/requests: userId={}, eventId={}", userId, eventId);
 
     return participationRequestService.createParticipationRequest(userId, eventId);
   }
 
   @PatchMapping("/{userId}/requests/{requestId}/cancel")
-  public ParticipationRequestDto cancelParticipantRequest(@PathVariable Long userId, @PathVariable Long requestId) {
-    log.info("PATCH /{userId}/requests/{requestId}/cancel: userId={}, requestId={}", userId, requestId);
+  public ParticipationRequestDto cancelParticipantRequest(
+      @PathVariable Long userId, @PathVariable Long requestId) {
+    log.info(
+        "PATCH /{userId}/requests/{requestId}/cancel: userId={}, requestId={}", userId, requestId);
 
     return participationRequestService.cancelParticipantRequest(userId, requestId);
   }

@@ -70,4 +70,10 @@ public class CustomException {
       super(message);
     }
   }
+
+  public static class EventConflictException extends EventException {
+    public EventConflictException(String message) {
+      super(message);
+    }
+  }
 }

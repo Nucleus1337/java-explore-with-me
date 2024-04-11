@@ -9,11 +9,15 @@ public class DateUtil {
   private static final String OVER_ISO_DATE_TIME = "yyyy-MM-dd HH:mm:ss";
 
   public static LocalDateTime toLocalDateTime(String stringDate) {
+    if (stringDate == null) return null;
+
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern(OVER_ISO_DATE_TIME);
     return LocalDateTime.parse(stringDate, formatter);
   }
 
   public static LocalDateTime toLocalDateTime(String stringDate, String pattern) {
+    if (stringDate == null) return null;
+
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
     return LocalDateTime.parse(stringDate, formatter);
   }
