@@ -4,12 +4,11 @@ import java.util.Map;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
-import org.springframework.beans.factory.annotation.Value;
 import ru.practicum.annotation.AtLeastTwoHoursBeforeStart;
 
 @Data
@@ -26,21 +25,15 @@ public class NewEventDto {
   @Length(min = 20, max = 7000)
   private String description;
 
-  @NotBlank
-  @AtLeastTwoHoursBeforeStart
-  private String eventDate;
+  @NotBlank @AtLeastTwoHoursBeforeStart private String eventDate;
 
   @NotEmpty private Map<String, Object> location;
 
-  @Value("false")
-  private Boolean paid = false;
+  private Boolean paid;
 
-  @Value("0")
-  @Positive
-  private Long participantLimit = 0L;
+  @PositiveOrZero private Long participantLimit;
 
-  @Value("true")
-  private Boolean requestModeration = true;
+  private Boolean requestModeration;
 
   @NotBlank
   @Length(min = 3, max = 120)

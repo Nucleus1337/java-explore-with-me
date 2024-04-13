@@ -4,7 +4,6 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
-import ru.practicum.annotation.AtLeastOneHoursBeforeStart;
 
 @Data
 @AllArgsConstructor
@@ -17,7 +16,7 @@ public class UpdateEventAdminRequestDto {
   @Length(min = 20, max = 7000)
   private String description;
 
-  @AtLeastOneHoursBeforeStart private String eventDate;
+  private String eventDate;
   private Map<String, Object> location;
   private Boolean paid;
   private Long participantLimit;

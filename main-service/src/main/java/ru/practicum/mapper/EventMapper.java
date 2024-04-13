@@ -28,9 +28,11 @@ public class EventMapper {
         .eventDate(toLocalDateTime(newEventDto.getEventDate()))
         .lat((Double) newEventDto.getLocation().get("lat"))
         .lon((Double) newEventDto.getLocation().get("lon"))
-        .paid(newEventDto.getPaid())
-        .participantLimit(newEventDto.getParticipantLimit())
-        .requestModeration(newEventDto.getRequestModeration())
+        .paid(newEventDto.getPaid() != null && newEventDto.getPaid())
+        .participantLimit(
+            newEventDto.getParticipantLimit() == null ? 0L : newEventDto.getParticipantLimit())
+        .requestModeration(
+            newEventDto.getRequestModeration() == null || newEventDto.getRequestModeration())
         .title(newEventDto.getTitle())
         .created(LocalDateTime.now())
         .user(user)
@@ -60,6 +62,7 @@ public class EventMapper {
         .state(event.getState().toString())
         .title(event.getTitle())
         .views(viewsStatistics)
+        .requestModeration(event.getRequestModeration())
         .build();
   }
 
@@ -69,6 +72,7 @@ public class EventMapper {
     UserShortDto userShortDto = toShortDto(event.getUser());
 
     return EventShortDto.builder()
+        .id(event.getId())
         .annotation(event.getAnnotation())
         .category(categoryDto)
         .confirmedRequests(confirmedRequestsCount)

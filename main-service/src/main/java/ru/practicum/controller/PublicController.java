@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,7 +47,7 @@ public class PublicController {
 
   @GetMapping("/compilations")
   public List<CompilationDto> findCompilations(
-      @RequestParam Boolean pinned,
+      @RequestParam(required = false) Boolean pinned,
       @RequestParam(defaultValue = "0") Integer from,
       @RequestParam(defaultValue = "10") Integer size) {
     log.info("GET /compilation: pinned={}, from={}, size={}", pinned, from, size);
@@ -74,7 +75,7 @@ public class PublicController {
   @GetMapping("/events")
   public List<EventShortDto> findEvents(
       @RequestParam(required = false) String text,
-      @RequestParam(required = false) Long[] categories,
+      @RequestParam(required = false) List<Long> categories,
       @RequestParam(required = false) Boolean paid,
       @RequestParam(required = false) String rangeStart,
       @RequestParam(required = false) String rangeEnd,
@@ -95,9 +96,9 @@ public class PublicController {
         sort,
         from,
         size);
-    Pageable pageable = getPageable(from, size);
+    Pageable pageable = getPageable(from, size, sort == null ? Sort.unsorted() : Sort.by(sort));
 
     return eventService.findAllEventsWithFilters(
-        text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, request, pageable);
+        text, categories, paid, rangeStart, rangeEnd, onlyAvailable, request, pageable);
   }
 }

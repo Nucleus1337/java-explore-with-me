@@ -1,20 +1,18 @@
 package ru.practicum.dto;
 
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
 import javax.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
-import org.hibernate.validator.constraints.UniqueElements;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 public class NewCompilationDto {
-  @UniqueElements private Long[] events;
+  private List<Long> events;
 
-  @JsonSetter(nulls = Nulls.SKIP)
-  private Boolean pinned = false;
+  private Boolean pinned;
 
   @Length(min = 1, max = 50)
   @NotBlank

@@ -61,11 +61,16 @@ public class ParticipationRequestService {
     Event event = getEvent(eventId);
     Long eventParticipantCount = participationRequestRepository.countByEvent(event);
 
-    if (event.getUser().getId().equals(userId)
-        || !event.getState().equals(EventState.PUBLISHED)
-        || event.getParticipantLimit().equals(eventParticipantCount)) {
+    if (event.getUser().getId().equals(userId)) {
       throw new CustomException.ParticipantRequestConflictException(
           "Нельзя подавать заявку на свое же мероприятие");
+    }
+    if (!event.getState().equals(EventState.PUBLISHED)) {
+      throw new CustomException.ParticipantRequestConflictException("Событие не опубликовано");
+    }
+    if (event.getParticipantLimit() != 0L
+        && event.getParticipantLimit().equals(eventParticipantCount)) {
+      throw new CustomException.ParticipantRequestConflictException("Исчерпан лимит заявок");
     }
 
     User user = getUser(userId);
@@ -112,7 +117,8 @@ public class ParticipationRequestService {
     checkIsUserOwner(event, userId);
 
     if (event.getParticipantLimit().equals(0L) || !event.getRequestModeration()) {
-      return new EventRequestStatusUpdateResultDto(Collections.emptyList(), Collections.emptyList());
+      return new EventRequestStatusUpdateResultDto(
+          Collections.emptyList(), Collections.emptyList());
     }
 
     requestIds.sort(null);

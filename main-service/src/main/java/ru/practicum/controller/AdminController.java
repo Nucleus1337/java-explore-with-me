@@ -85,7 +85,7 @@ public class AdminController {
 
   @PatchMapping("/categories/{catId}")
   public CategoryDto updateCategory(
-      @PathVariable(name = "catId") Long catId, @RequestBody CategoryDto categoryDto) {
+      @PathVariable(name = "catId") Long catId, @RequestBody @Valid CategoryDto categoryDto) {
     log.info("PATCH /admin/categories/{catId}: catId={}", catId);
 
     return categoryService.update(catId, categoryDto);
@@ -99,7 +99,7 @@ public class AdminController {
     return compilationService.createNewCompilation(compilationDto);
   }
 
-  @DeleteMapping("/compilation/{compId}")
+  @DeleteMapping("/compilations/{compId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public ResponseEntity<Object> removeCompilation(@RequestParam Long compId) {
     log.info("DELETE /admin/compilation/{compId}: compId={}", compId);
@@ -107,7 +107,7 @@ public class AdminController {
     return compilationService.deleteCompilation(compId);
   }
 
-  @PatchMapping("/compilation/{compId}")
+  @PatchMapping("/compilations/{compId}")
   public CompilationDto updateCompilation(
       @RequestBody @Valid UpdateCompilationRequestDto compilationUpdateDto,
       @PathVariable Long compId) {
@@ -129,9 +129,9 @@ public class AdminController {
 
   @GetMapping("/events")
   public List<EventFullDto> findEvents(
-      @RequestParam(required = false) Long[] users,
-      @RequestParam(required = false) String[] states,
-      @RequestParam(required = false) Long[] categories,
+      @RequestParam(required = false) List<Long> users,
+      @RequestParam(required = false) List<String> states,
+      @RequestParam(required = false) List<Long> categories,
       @RequestParam(required = false) String rangeStart,
       @RequestParam(required = false) String rangeEnd,
       @RequestParam(defaultValue = "0") Integer from,

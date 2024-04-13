@@ -70,7 +70,7 @@ public class PrivateController {
       @PathVariable Long userId,
       @PathVariable Long eventId,
       @RequestBody @Valid UpdateEventUserRequestDto updateDto) {
-    log.info("PATCH /{userId}/events/{eventId}: userId={}, eventId={}", userId, eventId);
+    log.info("PATCH /{userId}/events/{eventId}: userId={}, eventId={}, updateDto={}", userId, eventId, updateDto);
 
     return eventService.updateEventByOwner(userId, eventId, updateDto);
   }

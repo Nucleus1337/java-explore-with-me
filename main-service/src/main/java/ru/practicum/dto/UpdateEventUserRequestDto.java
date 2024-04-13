@@ -5,7 +5,6 @@ import javax.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
-import ru.practicum.annotation.AtLeastTwoHoursBeforeStart;
 
 @Data
 @AllArgsConstructor
@@ -18,13 +17,11 @@ public class UpdateEventUserRequestDto {
   @Length(min = 20, max = 7000)
   private String description;
 
-  @AtLeastTwoHoursBeforeStart
   private String eventDate;
   private Map<String, Object> location;
   private Boolean paid;
 
-  @PositiveOrZero
-  private Long participantLimit;
+  @PositiveOrZero private Long participantLimit;
   private Boolean requestModeration;
   private String stateAction;
 

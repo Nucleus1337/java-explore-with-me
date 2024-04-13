@@ -1,6 +1,5 @@
 package ru.practicum.repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +20,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
   @Query("select e from Event e where e.compilation in ?1")
   List<Event> findAllByCompilation(List<Compilation> compilations);
 
-  List<Event> findAllById(Long[] ids);
+//  List<Event> findAllById(Long[] ids);
 
   @Modifying
   @Query("update Event e set e.compilation = :compilation where id in :ids")
@@ -50,41 +49,40 @@ public interface EventRepository extends JpaRepository<Event, Long> {
               + "select e.* "
               + "from events e "
               + "left join requests_count r on r.event_id = e.id "
-              + "where lower(e.annotation) ilike concat('%', :text, '%') "
-              + "      or lower(e.description) ilike concat('%', :text, '%') "
+              + "where lower(e.annotation) ilike concat('%', cast(:text as text), '%') "
+              + "      or lower(e.description) ilike concat('%', cast(:text as text), '%') "
               + "      or :text is null "
               + "and e.state = 'PUBLISHED' "
               + "and coalesce (:paid, e.paid) = e.paid "
-              + "and category_id in (:categories) "
-              + "and (:rangeStart is null and :rangeEnd is null or :rangeStart <= e.event_date and :rangeEnd >= e.event_date) "
+              + "and (category_id in (:categories) or :categories is null) "
+              + "and (e.event_date between to_timestamp(:rangeStart, 'yyyy-mm-dd hh24:mi:ss') and to_timestamp(:rangeEnd, 'yyyy-mm-dd hh24:mi:ss') or :rangeStart is null and :rangeEnd is null) "
               + "and (:onlyAvailable = false or r.cnt < e.participant_limit and :onlyAvailable = true) "
-              + "order by :sort")
+              /*+ "order by :sort"*/)
   List<Event> findAllWithFilters(
       @Param("text") String text,
       @Param("paid") Boolean paid,
-      @Param("categories") Long[] categories,
-      @Param("rangeStart") LocalDateTime rangeStart,
-      @Param("rangeEnd") LocalDateTime rangeEnd,
+      @Param("categories") List<Long> categories,
+      @Param("rangeStart") String rangeStart,
+      @Param("rangeEnd") String rangeEnd,
       @Param("onlyAvailable") Boolean onlyAvailable,
-      @Param("sort") String sort,
       Pageable pageable);
 
   @Query(
       nativeQuery = true,
       value =
-          "select e.*\n"
-              + "from events e\n"
-              + "where (category_id in (:categories) or :categories is null)\n"
-              + "and (user_id in (:users) or :categories is null)\n"
-              + "and (state in (:states) or :states is null)\n"
-              + "and (:rangeStart is null or :rangeStart <= e.event_date) \n"
-              + "and (:rangeEnd is null or :rangeEnd >= e.event_date)\n"
+          "select e.* \n"
+              + "from events e \n"
+              + "where (:categories is null or category_id in (:categories)) \n"
+              + "and (:users is null or user_id in (:users)) \n"
+              + "and (:states is null or state in (:states)) \n"
+              + "and (:rangeStart is null or to_timestamp(:rangeStart, 'yyyy-mm-dd hh24:mi:ss') <= e.event_date) \n"
+              + "and (:rangeEnd is null or to_timestamp(:rangeEnd, 'yyyy-mm-dd hh24:mi:ss') >= e.event_date) \n"
               + "order by id")
   List<Event> findAllWithFilters(
-      @Param("users") Long[] users,
-      @Param("states") String[] states,
-      @Param("categories") Long[] categories,
-      @Param("rangeStart") LocalDateTime rangeStart,
-      @Param("rangeEnd") LocalDateTime rangeEnd,
+      @Param("users") List<Long> users,
+      @Param("states") List<String> states,
+      @Param("categories") List<Long> categories,
+      @Param("rangeStart") String rangeStart,
+      @Param("rangeEnd") String rangeEnd,
       Pageable pageable);
 }

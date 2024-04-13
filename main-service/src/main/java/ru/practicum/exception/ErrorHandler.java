@@ -34,6 +34,7 @@ public class ErrorHandler {
   @ExceptionHandler({
     CustomException.UserException.class,
     CustomException.CategoryException.class,
+    CustomException.EventException.class,
     IllegalStateException.class,
     MissingServletRequestParameterException.class
   })
@@ -51,6 +52,8 @@ public class ErrorHandler {
   @ExceptionHandler({
     DataIntegrityViolationException.class,
     ConstraintViolationException.class,
+    CustomException.ParticipantRequestConflictException.class,
+    CustomException.EventConflictException.class,
     CustomException.ParticipantRequestConflictException.class
   })
   @ResponseStatus(HttpStatus.CONFLICT)

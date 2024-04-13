@@ -49,6 +49,8 @@ public class CompilationService {
   }
 
   private List<EventShortDto> getEventsShort(List<Event> events) {
+    if (events.isEmpty()) return Collections.emptyList();
+
     List<ParticipationRequest> requests = participationRequestRepository.findAllByEvent(events);
 
     String[] uris = new String[events.size()];
@@ -73,7 +75,6 @@ public class CompilationService {
         .collect(Collectors.toList());
   }
 
-
   private Long getHits(String[] uris, Event event) {
     List<ViewStatsDto> views = getViews(uris, DateUtil.toString(event.getCreated()));
 
@@ -83,7 +84,7 @@ public class CompilationService {
   @SuppressWarnings("unchecked")
   private List<ViewStatsDto> getViews(String[] uris, String startDate) {
     ResponseEntity<Object> response =
-            statsClient.findStatistics(startDate, DateUtil.toString(LocalDateTime.now()), uris, false);
+        statsClient.findStatistics(startDate, DateUtil.toString(LocalDateTime.now()), uris, false);
 
     List<ViewStatsDto> views = new ArrayList<>();
     for (Object o : (List<Object>) Objects.requireNonNull(response.getBody())) {
@@ -96,10 +97,13 @@ public class CompilationService {
   public CompilationDto createNewCompilation(NewCompilationDto newCompilationDto) {
     Compilation compilation = compilationRepository.saveAndFlush(toModel(newCompilationDto));
 
-    List<Event> events = eventRepository.findAllById(newCompilationDto.getEvents());
-    events.forEach(event -> event.setCompilation(compilation));
+    List<Event> events = new ArrayList<>();
+    if (newCompilationDto.getEvents() != null && !newCompilationDto.getEvents().isEmpty()) {
+      events = eventRepository.findAllById(newCompilationDto.getEvents());
+      events.forEach(event -> event.setCompilation(compilation));
 
-    eventRepository.saveAllAndFlush(events);
+      eventRepository.saveAllAndFlush(events);
+    }
 
     List<EventShortDto> eventsShort = getEventsShort(events);
 
@@ -121,10 +125,10 @@ public class CompilationService {
     if (updateDto.getPinned() != null) {
       compilation.setPinned(updateDto.getPinned());
     }
-    if (!updateDto.getTitle().isBlank()) {
+    if (updateDto.getTitle() != null) {
       compilation.setTitle(updateDto.getTitle());
     }
-    if (updateDto.getEvents().length != 0) {
+    if (updateDto.getEvents() != null) {
       events = eventRepository.findAllById(updateDto.getEvents());
       events.forEach(event -> event.setCompilation(compilation));
 

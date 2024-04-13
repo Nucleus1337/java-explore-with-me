@@ -10,7 +10,10 @@ import ru.practicum.model.Compilation;
 @UtilityClass
 public class CompilationMapper {
   public static Compilation toModel(NewCompilationDto dto) {
-    return Compilation.builder().title(dto.getTitle()).pinned(dto.getPinned()).build();
+    return Compilation.builder()
+        .title(dto.getTitle())
+        .pinned(dto.getPinned() != null && dto.getPinned())
+        .build();
   }
 
   public static CompilationDto toDto(Compilation compilation, List<EventShortDto> events) {

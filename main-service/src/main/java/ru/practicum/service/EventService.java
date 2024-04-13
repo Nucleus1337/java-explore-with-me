@@ -151,7 +151,7 @@ public class EventService {
     if (updateDto.getRequestModeration() != null) {
       event.setRequestModeration(updateDto.getRequestModeration());
     }
-    if (!updateDto.getLocation().isEmpty()) {
+    if (updateDto.getLocation() != null) {
       if (updateDto.getLocation().get("lat") != null) {
         event.setLat((Double) updateDto.getLocation().get("lat"));
       }
@@ -163,7 +163,10 @@ public class EventService {
       Category category = getCategory(updateDto.getCategory());
       event.setCategory(category);
     }
-    if (!updateDto.getEventDate().isBlank()) {
+    if (updateDto.getEventDate() != null) {
+      if (!LocalDateTime.now().plusHours(1).isBefore(toLocalDateTime(updateDto.getEventDate()))) {
+        throw new CustomException.EventException("До начала должно быть хотя бы 2 часа");
+      }
       event.setEventDate(toLocalDateTime(updateDto.getEventDate()));
     }
     if (updateDto.getDescription() != null) {
@@ -211,12 +214,11 @@ public class EventService {
       event.setState(getEventState(StateActionEvent.findByValue(updateDto.getStateAction())));
     }
 
-    if (!updateDto.getEventDate().isBlank()) {
+    if (updateDto.getEventDate() != null) {
       LocalDateTime newEventDate = toLocalDateTime(updateDto.getEventDate());
 
       if (LocalDateTime.now().plusHours(1).isAfter(newEventDate)) {
-        throw new CustomException.EventConflictException(
-            "It should be at least 1 hour before start");
+        throw new CustomException.EventException("It should be at least 1 hour before start");
       }
       event.setEventDate(toLocalDateTime(updateDto.getEventDate()));
     }
@@ -230,7 +232,7 @@ public class EventService {
     if (updateDto.getRequestModeration() != null) {
       event.setRequestModeration(updateDto.getRequestModeration());
     }
-    if (!updateDto.getLocation().isEmpty()) {
+    if (updateDto.getLocation() != null) {
       if (updateDto.getLocation().get("lat") != null) {
         event.setLat((Double) updateDto.getLocation().get("lat"));
       }
@@ -269,10 +271,11 @@ public class EventService {
           String.format("Event with id=%s was not published", id));
     }
 
+    addStatistics(serverName, uri, remoteAddress);
+
     Long confirmedRequestsCount = getParticipationRequestCountByEventId(id);
     Long hits = getHits(new String[] {uri}, event);
 
-    addStatistics(serverName, uri, remoteAddress);
     return toResponseFullDto(event, confirmedRequestsCount, hits);
   }
 
@@ -285,7 +288,7 @@ public class EventService {
   @SuppressWarnings("unchecked")
   private List<ViewStatsDto> getViews(String[] uris, String startDate) {
     ResponseEntity<Object> response =
-        statsClient.findStatistics(startDate, DateUtil.toString(LocalDateTime.now()), uris, false);
+        statsClient.findStatistics(startDate, DateUtil.toString(LocalDateTime.now()), uris, true);
 
     List<ViewStatsDto> views = new ArrayList<>();
     for (Object o : (List<Object>) Objects.requireNonNull(response.getBody())) {
@@ -297,21 +300,34 @@ public class EventService {
 
   public List<EventShortDto> findAllEventsWithFilters(
       String text,
-      Long[] categories,
+      List<Long> categories,
       Boolean paid,
       String rangeStart,
       String rangeEnd,
       Boolean onlyAvailable,
-      String sort,
       HttpServletRequest request,
       Pageable pageable) {
-    LocalDateTime start = toLocalDateTime(rangeStart);
-    LocalDateTime end = toLocalDateTime(rangeEnd);
+    if (toLocalDateTime(rangeEnd).isBefore(toLocalDateTime(rangeStart))) {
+      throw new CustomException.EventException("Дата окончания периода раньше его начала");
+    }
+
+    List<Category> categoryList = categoryRepository.findAllById(categories);
+    if (categoryList.size() != categories.size()) {
+      throw new CustomException.EventException("Найдены не все категории");
+    }
 
     List<Event> events =
         eventRepository.findAllWithFilters(
-            text, paid, categories, start, end, onlyAvailable, sort, pageable);
+            text,
+            paid,
+            categories,
+            rangeStart,
+            rangeEnd,
+            onlyAvailable,
+            pageable);
     List<ParticipationRequest> requests = participationRequestRepository.findAllByEvent(events);
+
+    addStatistics(request.getServerName(), request.getRequestURI(), request.getRemoteAddr());
 
     String[] uris = getUrisForEvents(events);
 
@@ -322,8 +338,6 @@ public class EventService {
             .orElse(LocalDateTime.now());
 
     List<ViewStatsDto> views = getViews(uris, DateUtil.toString(startViewsFrom));
-
-    addStatistics(request.getServerName(), request.getRequestURI(), request.getRemoteAddr());
 
     return getEventShortDtoList(events, requests, views);
   }
@@ -355,26 +369,26 @@ public class EventService {
   }
 
   private List<EventFullDto> getEventFullDtoList(
-          List<Event> events, List<ParticipationRequest> requests, List<ViewStatsDto> views) {
+      List<Event> events, List<ParticipationRequest> requests, List<ViewStatsDto> views) {
     return events.stream()
-            .map(
-                    event -> {
-                      Long count =
-                              requests.stream().filter(request -> request.getEvent().equals(event)).count();
-                      List<ViewStatsDto> viewsForEvent =
-                              views.stream()
-                                      .filter(view -> view.getUri().equals("/events/" + event.getId()))
-                                      .collect(Collectors.toList());
-                      return EventMapper.toResponseFullDto(
-                              event, count, viewsForEvent.isEmpty() ? 0L : viewsForEvent.get(0).getHits());
-                    })
-            .collect(Collectors.toList());
+        .map(
+            event -> {
+              Long count =
+                  requests.stream().filter(request -> request.getEvent().equals(event)).count();
+              List<ViewStatsDto> viewsForEvent =
+                  views.stream()
+                      .filter(view -> view.getUri().equals("/events/" + event.getId()))
+                      .collect(Collectors.toList());
+              return EventMapper.toResponseFullDto(
+                  event, count, viewsForEvent.isEmpty() ? 0L : viewsForEvent.get(0).getHits());
+            })
+        .collect(Collectors.toList());
   }
 
   public List<EventFullDto> findAllEventsWithFiltersAdmin(
-      Long[] users,
-      String[] states,
-      Long[] categories,
+      List<Long> users,
+      List<String> states,
+      List<Long> categories,
       String rangeStart,
       String rangeEnd,
       HttpServletRequest request,
@@ -382,16 +396,23 @@ public class EventService {
     LocalDateTime start = toLocalDateTime(rangeStart);
     LocalDateTime end = toLocalDateTime(rangeEnd);
 
-    List<Event> events = eventRepository.findAllWithFilters(users, states, categories, start, end, pageable);
+    List<Event> events =
+        eventRepository.findAllWithFilters(
+            users == null ? Collections.emptyList() : users,
+            states == null ? Collections.emptyList() : states,
+            categories == null ? Collections.emptyList() : categories,
+            rangeStart,
+            rangeEnd,
+            pageable);
     List<ParticipationRequest> requests = participationRequestRepository.findAllByEvent(events);
 
     String[] uris = getUrisForEvents(events);
 
     LocalDateTime startViewsFrom =
-            events.stream()
-                    .map(Event::getEventDate)
-                    .min(LocalDateTime::compareTo)
-                    .orElse(LocalDateTime.now());
+        events.stream()
+            .map(Event::getEventDate)
+            .min(LocalDateTime::compareTo)
+            .orElse(LocalDateTime.now());
 
     List<ViewStatsDto> views = getViews(uris, DateUtil.toString(startViewsFrom));
 

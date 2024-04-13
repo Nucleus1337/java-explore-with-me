@@ -8,6 +8,7 @@ import lombok.Data;
 @Builder
 @AllArgsConstructor
 public class EventShortDto {
+    private Long id;
     private String annotation;
     private CategoryDto category;
     private Long confirmedRequests;
