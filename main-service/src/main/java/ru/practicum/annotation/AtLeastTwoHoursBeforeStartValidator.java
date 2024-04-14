@@ -19,7 +19,7 @@ public class AtLeastTwoHoursBeforeStartValidator
     if (string == null) return true;
 
     LocalDateTime eventDate = toLocalDateTime(string);
-    return LocalDateTime.now().plusHours(2).isBefore(eventDate)
-        || LocalDateTime.now().plusHours(2).isEqual(eventDate);
+    return LocalDateTime.now().plusHours(2).minusSeconds(5).isBefore(eventDate)
+        || LocalDateTime.now().plusHours(2).minusSeconds(5).isEqual(eventDate);
   }
 }
