@@ -171,8 +171,8 @@ public class EventService {
       event.setCategory(category);
     }
     if (updateDto.getEventDate() != null) {
-      if (!LocalDateTime.now().plusHours(1).isBefore(toLocalDateTime(updateDto.getEventDate()))) {
-        throw new CustomException.EventException("До начала должно быть хотя бы 2 часа");
+      if (LocalDateTime.now().plusHours(1).isAfter(toLocalDateTime(updateDto.getEventDate()))) {
+        throw new CustomException.EventException("До начала должно быть хотя бы 1 час");
       }
       event.setEventDate(toLocalDateTime(updateDto.getEventDate()));
     }
