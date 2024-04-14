@@ -16,6 +16,8 @@ public class AtLeastTwoHoursBeforeStartValidator
 
   @Override
   public boolean isValid(String string, ConstraintValidatorContext constraintValidatorContext) {
+    if (string == null) return true;
+
     LocalDateTime eventDate = toLocalDateTime(string);
     return LocalDateTime.now().plusHours(2).isBefore(eventDate)
         || LocalDateTime.now().plusHours(2).isEqual(eventDate);
