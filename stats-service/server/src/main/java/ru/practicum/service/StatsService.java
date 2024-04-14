@@ -6,6 +6,7 @@ import static ru.practicum.util.DateUtil.toLocalDateTime;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.practicum.dto.EndpointHitDto;
@@ -22,7 +23,7 @@ public class StatsService {
     Hit hit = toModel(hitDto);
     statsRepository.saveAndFlush(hit);
 
-    return ResponseEntity.ok().build();
+    return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
   public List<ViewStatsDto> find(
