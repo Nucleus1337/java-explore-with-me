@@ -2,8 +2,11 @@ package ru.practicum.service;
 
 import static ru.practicum.mapper.EventMapper.toModel;
 import static ru.practicum.mapper.EventMapper.toResponseFullDto;
+import static ru.practicum.model.enums.EventState.CANCELED;
+import static ru.practicum.model.enums.EventState.PENDING;
 import static ru.practicum.model.enums.StateActionEvent.PUBLISH_EVENT;
 import static ru.practicum.model.enums.StateActionEvent.REJECT_EVENT;
+import static ru.practicum.model.enums.StateActionReview.CANCEL_REVIEW;
 import static ru.practicum.util.DateUtil.toLocalDateTime;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -138,9 +141,13 @@ public class EventService {
   public EventFullDto updateEventByOwner(
       Long userId, Long eventId, UpdateEventUserRequestDto updateDto) {
     Event event = getEvent(eventId);
-    Long confirmedRequestsCount = getParticipationRequestCountByEvent(event);
-
     checkIsUserOwner(event, userId);
+
+    if (event.getState() == EventState.PUBLISHED) {
+      throw new CustomException.EventConflictException("Нельзя менять опубликованное событие");
+    }
+
+    Long confirmedRequestsCount = getParticipationRequestCountByEvent(event);
 
     if (updateDto.getAnnotation() != null) {
       event.setAnnotation(updateDto.getAnnotation());
@@ -178,6 +185,11 @@ public class EventService {
     if (updateDto.getParticipantLimit() != null) {
       event.setParticipantLimit(updateDto.getParticipantLimit());
     }
+    if (updateDto.getStateAction() != null) {
+      EventState state =
+          updateDto.getStateAction().equals(CANCEL_REVIEW.toString()) ? CANCELED : PENDING;
+      event.setState(state);
+    }
 
     Long hits = getHits(new String[] {"/events/" + event.getId()}, event);
 
@@ -191,7 +203,7 @@ public class EventService {
       case PUBLISH_EVENT:
         return EventState.PUBLISHED;
       case REJECT_EVENT:
-        return EventState.CANCELED;
+        return CANCELED;
       default:
         return null;
     }
@@ -204,11 +216,11 @@ public class EventService {
     if (updateDto.getStateAction() != null) {
       if (updateDto.getStateAction().equalsIgnoreCase(PUBLISH_EVENT.toString())
           && !event.getState().equals(EventState.PENDING)) {
-        throw new CustomException.EventConflictException("Event is already published");
+        throw new CustomException.EventConflictException("Event is not pending");
       }
       if (updateDto.getStateAction().equalsIgnoreCase(REJECT_EVENT.toString())
-          && !event.getState().equals(EventState.PUBLISHED)) {
-        throw new CustomException.EventConflictException("Event is not published yet");
+          && event.getState().equals(EventState.PUBLISHED)) {
+        throw new CustomException.EventConflictException("Event is already published");
       }
 
       event.setState(getEventState(StateActionEvent.findByValue(updateDto.getStateAction())));
@@ -307,20 +319,24 @@ public class EventService {
       Boolean onlyAvailable,
       HttpServletRequest request,
       Pageable pageable) {
-    if (toLocalDateTime(rangeEnd).isBefore(toLocalDateTime(rangeStart))) {
-      throw new CustomException.EventException("Дата окончания периода раньше его начала");
+    if (rangeStart != null && rangeEnd != null) {
+      if (toLocalDateTime(rangeEnd).isBefore(toLocalDateTime(rangeStart))) {
+        throw new CustomException.EventException("Дата окончания периода раньше его начала");
+      }
     }
 
-    List<Category> categoryList = categoryRepository.findAllById(categories);
-    if (categoryList.size() != categories.size()) {
-      throw new CustomException.EventException("Найдены не все категории");
+    if (categories != null) {
+      List<Category> categoryList = categoryRepository.findAllById(categories);
+      if (categoryList.size() != categories.size()) {
+        throw new CustomException.EventException("Найдены не все категории");
+      }
     }
 
     List<Event> events =
         eventRepository.findAllWithFilters(
             text,
             paid,
-            categories,
+            categories == null ? Collections.emptyList() : categories,
             rangeStart,
             rangeEnd,
             onlyAvailable,
@@ -333,7 +349,7 @@ public class EventService {
 
     LocalDateTime startViewsFrom =
         events.stream()
-            .map(Event::getEventDate)
+            .map(Event::getCreated)
             .min(LocalDateTime::compareTo)
             .orElse(LocalDateTime.now());
 
@@ -393,9 +409,6 @@ public class EventService {
       String rangeEnd,
       HttpServletRequest request,
       Pageable pageable) {
-    LocalDateTime start = toLocalDateTime(rangeStart);
-    LocalDateTime end = toLocalDateTime(rangeEnd);
-
     List<Event> events =
         eventRepository.findAllWithFilters(
             users == null ? Collections.emptyList() : users,
@@ -410,7 +423,7 @@ public class EventService {
 
     LocalDateTime startViewsFrom =
         events.stream()
-            .map(Event::getEventDate)
+            .map(Event::getCreated)
             .min(LocalDateTime::compareTo)
             .orElse(LocalDateTime.now());
 

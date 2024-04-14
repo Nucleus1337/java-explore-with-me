@@ -1,5 +1,7 @@
 package ru.practicum.controller;
 
+import static ru.practicum.util.DateUtil.toLocalDateTime;
+
 import java.util.List;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
+import ru.practicum.exception.CustomException;
 import ru.practicum.service.StatsService;
 
 @RestController
@@ -36,6 +39,18 @@ public class StatsController {
       @RequestParam(required = false) String[] uris,
       @RequestParam(defaultValue = "false") boolean unique) {
     log.info("GET /stats: start={}, end={}, uris={}, unique={}", start, end, uris, unique);
+
+    if (start.isBlank()) {
+      throw new CustomException.BadRequestException("Start should not be blank");
+    }
+
+    if (end.isBlank()) {
+      throw new CustomException.BadRequestException("End should not be blank");
+    }
+
+    if (toLocalDateTime(start).isAfter(toLocalDateTime(end))) {
+      throw new CustomException.BadRequestException("End should be after start");
+    }
 
     return statsService.find(start, end, uris, unique);
   }

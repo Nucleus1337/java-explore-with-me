@@ -100,8 +100,7 @@ public class AdminController {
   }
 
   @DeleteMapping("/compilations/{compId}")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  public ResponseEntity<Object> removeCompilation(@RequestParam Long compId) {
+  public ResponseEntity<Object> removeCompilation(@PathVariable Long compId) {
     log.info("DELETE /admin/compilation/{compId}: compId={}", compId);
 
     return compilationService.deleteCompilation(compId);

@@ -1,7 +1,7 @@
 package ru.practicum.service;
 
 import static ru.practicum.mapper.ParticipationRequestMapper.toDto;
-import static ru.practicum.model.enums.ParticipationRequestStatus.REJECTED;
+import static ru.practicum.model.enums.ParticipationRequestStatus.CANCELED;
 import static ru.practicum.model.enums.ParticipationRequestStatus.CONFIRMED;
 import static ru.practicum.model.enums.ParticipationRequestStatus.PENDING;
 
@@ -21,6 +21,7 @@ import ru.practicum.model.Event;
 import ru.practicum.model.ParticipationRequest;
 import ru.practicum.model.User;
 import ru.practicum.model.enums.EventState;
+import ru.practicum.model.enums.ParticipationRequestStatus;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.ParticipationRequestRepository;
 import ru.practicum.repository.UserRepository;
@@ -75,12 +76,15 @@ public class ParticipationRequestService {
 
     User user = getUser(userId);
 
+    ParticipationRequestStatus status =
+        !event.getRequestModeration() || event.getParticipantLimit() == 0L ? CONFIRMED : PENDING;
+
     ParticipationRequest participationRequest =
         ParticipationRequest.builder()
             .created(LocalDateTime.now())
             .user(user)
             .event(event)
-            .status(event.getRequestModeration() ? PENDING : CONFIRMED)
+            .status(status)
             .build();
     return toDto(participationRequestRepository.saveAndFlush(participationRequest));
   }
@@ -97,7 +101,10 @@ public class ParticipationRequestService {
       throw new CustomException.ParticipantRequestNotFoundException(
           String.format("User with id=%s is not owner of request", userId));
     }
-    return toDto(participationRequest);
+
+    participationRequest.setStatus(CANCELED);
+
+    return toDto(participationRequestRepository.saveAndFlush(participationRequest));
   }
 
   public List<ParticipationRequestDto> findAllParticipationRequestOnMyEventId(
@@ -111,7 +118,7 @@ public class ParticipationRequestService {
         .collect(Collectors.toList());
   }
 
-  public EventRequestStatusUpdateResultDto changeStatusToPendingRequests(
+  public EventRequestStatusUpdateResultDto changeStatusRequests(
       Long userId, Long eventId, List<Long> requestIds, String status) {
     Event event = getEvent(eventId);
     checkIsUserOwner(event, userId);
@@ -125,18 +132,6 @@ public class ParticipationRequestService {
 
     List<ParticipationRequest> requests = participationRequestRepository.findByEvent(event);
 
-    List<ParticipationRequest> pendingRequests =
-        requests.stream()
-            .filter(
-                request ->
-                    request.getStatus().equals(PENDING) && requestIds.contains(request.getId()))
-            .collect(Collectors.toList());
-
-    if (pendingRequests.size() != requestIds.size()) {
-      throw new CustomException.ParticipantRequestConflictException(
-          "статус можно изменить только у заявок, находящихся в состоянии ожидания");
-    }
-
     Long allConfirmed =
         requests.stream().filter(request -> request.getStatus().equals(CONFIRMED)).count();
 
@@ -147,14 +142,23 @@ public class ParticipationRequestService {
     List<ParticipationRequest> confirmed = new ArrayList<>();
     List<ParticipationRequest> rejected = new ArrayList<>();
 
-    pendingRequests.forEach(
+    requests.forEach(
         request -> {
-          if (confirmed.size() + allConfirmed <= event.getParticipantLimit()) {
-            request.setStatus(CONFIRMED);
+          if (requestIds.contains(request.getId()) && request.getStatus() != PENDING) {
+            throw new CustomException.ParticipantRequestConflictException(
+                    "статус можно менять только для завявок в ожидании");
+          }
+          if (requestIds.contains(request.getId()) && request.getStatus() == PENDING) {
+            request.setStatus(ParticipationRequestStatus.valueOf(status));
+          }
+
+          if (confirmed.size() + allConfirmed <= event.getParticipantLimit()
+              && request.getStatus() == CONFIRMED) {
             confirmed.add(request);
           } else {
-            request.setStatus(REJECTED);
-            rejected.add(request);
+            if (request.getStatus() != PENDING) {
+              rejected.add(request);
+            }
           }
         });
 
@@ -164,5 +168,11 @@ public class ParticipationRequestService {
     return new EventRequestStatusUpdateResultDto(
         confirmed.stream().map(ParticipationRequestMapper::toDto).collect(Collectors.toList()),
         rejected.stream().map(ParticipationRequestMapper::toDto).collect(Collectors.toList()));
+  }
+
+  public List<ParticipationRequestDto> findUserRequests(Long userId) {
+    User user = getUser(userId);
+    List<ParticipationRequest> requests = participationRequestRepository.findByUser(user);
+    return requests.stream().map(ParticipationRequestMapper::toDto).collect(Collectors.toList());
   }
 }

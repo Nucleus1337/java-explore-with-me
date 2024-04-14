@@ -42,7 +42,7 @@ public class PrivateController {
   @ResponseStatus(HttpStatus.CREATED)
   public EventFullDto createEvent(
       @RequestBody @Valid NewEventDto newEventDto, @PathVariable Long userId) {
-    log.info("POST /{userId}/events: eventRequestDto={}, userId={}", newEventDto, userId);
+    log.info("POST /users/{userId}/events: eventRequestDto={}, userId={}", newEventDto, userId);
 
     return eventService.createEvent(newEventDto, userId);
   }
@@ -52,7 +52,7 @@ public class PrivateController {
       @PathVariable Long userId,
       @RequestParam(defaultValue = "0") Integer from,
       @RequestParam(defaultValue = "10") Integer size) {
-    log.info("GET /{userId}/events: userId={}, from={}, size={}", userId, from, size);
+    log.info("GET /users/{userId}/events: userId={}, from={}, size={}", userId, from, size);
     Pageable pageable = getPageable(from, size);
 
     return eventService.findUserEvents(userId, pageable);
@@ -60,7 +60,7 @@ public class PrivateController {
 
   @GetMapping("/{userId}/events/{eventId}")
   public EventFullDto findUserEvent(@PathVariable Long userId, @PathVariable Long eventId) {
-    log.info("GET /{userId}/events/{eventId}: userId={}, eventId={}", userId, eventId);
+    log.info("GET /users/{userId}/events/{eventId}: userId={}, eventId={}", userId, eventId);
 
     return eventService.findUserEvent(userId, eventId);
   }
@@ -70,7 +70,11 @@ public class PrivateController {
       @PathVariable Long userId,
       @PathVariable Long eventId,
       @RequestBody @Valid UpdateEventUserRequestDto updateDto) {
-    log.info("PATCH /{userId}/events/{eventId}: userId={}, eventId={}, updateDto={}", userId, eventId, updateDto);
+    log.info(
+        "PATCH /users/{userId}/events/{eventId}: userId={}, eventId={}, updateDto={}",
+        userId,
+        eventId,
+        updateDto);
 
     return eventService.updateEventByOwner(userId, eventId, updateDto);
   }
@@ -78,7 +82,8 @@ public class PrivateController {
   @GetMapping("/{userId}/events/{eventId}/requests")
   public List<ParticipationRequestDto> findRequests(
       @PathVariable Long userId, @PathVariable Long eventId) {
-    log.info("GET /{userId}/events/{eventId}/requests: userId={}, eventId={}", userId, eventId);
+    log.info(
+        "GET /users/{userId}/events/{eventId}/requests: userId={}, eventId={}", userId, eventId);
 
     return participationRequestService.findAllParticipationRequestOnMyEventId(userId, eventId);
   }
@@ -89,7 +94,7 @@ public class PrivateController {
       @PathVariable Long eventId,
       @RequestBody EventRequestStatusUpdateRequestDto updateDto) {
     log.info(
-        "PATCH /{userId}/events/{eventId}/requests: userId={}, eventId={}, updateDto={}",
+        "PATCH /users/{userId}/events/{eventId}/requests: userId={}, eventId={}, updateDto={}",
         userId,
         eventId,
         updateDto);
@@ -97,7 +102,7 @@ public class PrivateController {
         && findByValue(updateDto.getStatus()).equals(PENDING)) {
       throw new CustomException.ParticipantRequestException("Неверный статус");
     }
-    return participationRequestService.changeStatusToPendingRequests(
+    return participationRequestService.changeStatusRequests(
         userId, eventId, updateDto.getRequestIds(), updateDto.getStatus());
   }
 
@@ -105,7 +110,7 @@ public class PrivateController {
   @ResponseStatus(HttpStatus.CREATED)
   public ParticipationRequestDto createParticipationRequest(
       @PathVariable Long userId, @RequestParam Long eventId) {
-    log.info("POST /{userId}/requests: userId={}, eventId={}", userId, eventId);
+    log.info("POST /users/{userId}/requests: userId={}, eventId={}", userId, eventId);
 
     return participationRequestService.createParticipationRequest(userId, eventId);
   }
@@ -114,8 +119,16 @@ public class PrivateController {
   public ParticipationRequestDto cancelParticipantRequest(
       @PathVariable Long userId, @PathVariable Long requestId) {
     log.info(
-        "PATCH /{userId}/requests/{requestId}/cancel: userId={}, requestId={}", userId, requestId);
+        "PATCH /users/{userId}/requests/{requestId}/cancel: userId={}, requestId={}",
+        userId,
+        requestId);
 
     return participationRequestService.cancelParticipantRequest(userId, requestId);
+  }
+
+  @GetMapping("/{userId}/requests")
+  public List<ParticipationRequestDto> getUserRequests(@PathVariable Long userId) {
+    log.info("GET /users/{userId}/requests: userId={}", userId);
+    return participationRequestService.findUserRequests(userId);
   }
 }
