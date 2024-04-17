@@ -113,7 +113,7 @@ public class ParticipationRequestService {
 
     checkIsUserOwner(event, userId);
 
-    return participationRequestRepository.findByEvent(event).stream()
+    return participationRequestRepository.findAllByEvent(event).stream()
         .map(ParticipationRequestMapper::toDto)
         .collect(Collectors.toList());
   }
@@ -130,7 +130,7 @@ public class ParticipationRequestService {
 
     requestIds.sort(null);
 
-    List<ParticipationRequest> requests = participationRequestRepository.findByEvent(event);
+    List<ParticipationRequest> requests = participationRequestRepository.findAllByEvent(event);
 
     Long allConfirmed =
         requests.stream().filter(request -> request.getStatus().equals(CONFIRMED)).count();
@@ -172,7 +172,7 @@ public class ParticipationRequestService {
 
   public List<ParticipationRequestDto> findUserRequests(Long userId) {
     User user = getUser(userId);
-    List<ParticipationRequest> requests = participationRequestRepository.findByUser(user);
+    List<ParticipationRequest> requests = participationRequestRepository.findAllByUser(user);
     return requests.stream().map(ParticipationRequestMapper::toDto).collect(Collectors.toList());
   }
 }
