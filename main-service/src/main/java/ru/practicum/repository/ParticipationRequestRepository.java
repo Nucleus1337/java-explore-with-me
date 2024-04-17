@@ -19,11 +19,11 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
   Long countByEventId(Long eventId);
 
   @Query("select p from ParticipationRequest p where p.event in ?1")
-  List<ParticipationRequest> findAllByEvents(List<Event> events);
+  List<ParticipationRequest> findAllByEvent(List<Event> events);
 
-  List<ParticipationRequest> findAllByEvent(Event event);
+  List<ParticipationRequest> findByEvent(Event event);
 
-  List<ParticipationRequest> findAllByUser(User user);
+  List<ParticipationRequest> findByUser(User user);
 
   Optional<ParticipationRequest> findByUserAndEvent(User user, Event event);
 }
