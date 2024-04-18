@@ -1,13 +1,12 @@
 package ru.practicum.service;
 
 import static ru.practicum.mapper.ParticipationRequestMapper.toDto;
-import static ru.practicum.model.enums.ParticipationRequestStatus.CANCELED;
-import static ru.practicum.model.enums.ParticipationRequestStatus.CONFIRMED;
-import static ru.practicum.model.enums.ParticipationRequestStatus.PENDING;
+import static ru.practicum.model.enums.ParticipationRequestStatus.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -128,9 +127,9 @@ public class ParticipationRequestService {
           Collections.emptyList(), Collections.emptyList());
     }
 
-    requestIds.sort(null);
-
     List<ParticipationRequest> requests = participationRequestRepository.findAllByEvent(event);
+    Comparator<ParticipationRequest> comparator = Comparator.comparing(ParticipationRequest::getCreated);
+    requests.sort(comparator);
 
     Long allConfirmed =
         requests.stream().filter(request -> request.getStatus().equals(CONFIRMED)).count();
@@ -157,6 +156,9 @@ public class ParticipationRequestService {
             confirmed.add(request);
           } else {
             if (request.getStatus() != PENDING) {
+              if (request.getStatus() == CONFIRMED) {
+                request.setStatus(REJECTED);
+              }
               rejected.add(request);
             }
           }

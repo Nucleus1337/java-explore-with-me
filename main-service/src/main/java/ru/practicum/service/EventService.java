@@ -224,6 +224,7 @@ public class EventService {
       }
 
       event.setState(getEventState(StateActionEvent.findByValue(updateDto.getStateAction())));
+      event.setPublished(LocalDateTime.now());
     }
 
     if (updateDto.getEventDate() != null) {
