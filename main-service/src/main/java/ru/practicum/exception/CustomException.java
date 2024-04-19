@@ -76,4 +76,22 @@ public class CustomException {
       super(message);
     }
   }
+
+  public static class CommentException extends RuntimeException {
+    public CommentException(String message) {
+      super(message);
+    }
+  }
+
+  public static class CommentNotFoundException extends CommentException {
+    public CommentNotFoundException(String message) {
+      super(message);
+    }
+  }
+
+  public static class CommentConflictException extends CommentException {
+    public CommentConflictException(String message) {
+      super(message);
+    }
+  }
 }

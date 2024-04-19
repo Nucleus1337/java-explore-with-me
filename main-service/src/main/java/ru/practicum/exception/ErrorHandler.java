@@ -35,6 +35,7 @@ public class ErrorHandler {
     CustomException.UserException.class,
     CustomException.CategoryException.class,
     CustomException.EventException.class,
+    CustomException.CommentException.class,
     IllegalStateException.class,
     MissingServletRequestParameterException.class
   })
@@ -54,7 +55,8 @@ public class ErrorHandler {
     ConstraintViolationException.class,
     CustomException.ParticipantRequestConflictException.class,
     CustomException.EventConflictException.class,
-    CustomException.ParticipantRequestConflictException.class
+    CustomException.ParticipantRequestConflictException.class,
+    CustomException.CommentConflictException.class
   })
   @ResponseStatus(HttpStatus.CONFLICT)
   @ResponseBody
@@ -71,7 +73,8 @@ public class ErrorHandler {
   @ExceptionHandler({
     CustomException.UserNotFoundException.class,
     CustomException.CategoryNotFoundException.class,
-    CustomException.EventNotFoundException.class
+    CustomException.EventNotFoundException.class,
+    CustomException.CommentNotFoundException.class
   })
   @ResponseStatus(HttpStatus.NOT_FOUND)
   @ResponseBody

@@ -118,7 +118,7 @@ public class EventService {
 
     List<Event> events =
         eventRepository.findByUserOrderByCreated(user, pageable).orElseGet(Collections::emptyList);
-    List<ParticipationRequest> requests = participationRequestRepository.findAllByEvent(events);
+    List<ParticipationRequest> requests = participationRequestRepository.findAllByEvents(events);
 
     String[] uris = getUrisForEvents(events);
 
@@ -224,6 +224,7 @@ public class EventService {
       }
 
       event.setState(getEventState(StateActionEvent.findByValue(updateDto.getStateAction())));
+      event.setPublished(LocalDateTime.now());
     }
 
     if (updateDto.getEventDate() != null) {
@@ -341,7 +342,7 @@ public class EventService {
             rangeEnd,
             onlyAvailable,
             pageable);
-    List<ParticipationRequest> requests = participationRequestRepository.findAllByEvent(events);
+    List<ParticipationRequest> requests = participationRequestRepository.findAllByEvents(events);
 
     addStatistics(request.getServerName(), request.getRequestURI(), request.getRemoteAddr());
 
@@ -417,7 +418,7 @@ public class EventService {
             rangeStart,
             rangeEnd,
             pageable);
-    List<ParticipationRequest> requests = participationRequestRepository.findAllByEvent(events);
+    List<ParticipationRequest> requests = participationRequestRepository.findAllByEvents(events);
 
     String[] uris = getUrisForEvents(events);
 

@@ -51,7 +51,7 @@ public class CompilationService {
   private List<EventShortDto> getEventsShort(List<Event> events) {
     if (events.isEmpty()) return Collections.emptyList();
 
-    List<ParticipationRequest> requests = participationRequestRepository.findAllByEvent(events);
+    List<ParticipationRequest> requests = participationRequestRepository.findAllByEvents(events);
 
     String[] uris = new String[events.size()];
     for (int i = 0; i < events.size(); i++) {

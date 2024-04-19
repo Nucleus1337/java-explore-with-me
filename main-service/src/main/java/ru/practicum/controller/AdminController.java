@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.dto.CategoryDto;
+import ru.practicum.dto.CommentRequestDto;
+import ru.practicum.dto.CommentResponseDto;
 import ru.practicum.dto.CompilationDto;
 import ru.practicum.dto.EventFullDto;
 import ru.practicum.dto.NewCompilationDto;
@@ -28,6 +30,7 @@ import ru.practicum.dto.UpdateCompilationRequestDto;
 import ru.practicum.dto.UpdateEventAdminRequestDto;
 import ru.practicum.dto.UserDto;
 import ru.practicum.service.CategoryService;
+import ru.practicum.service.CommentService;
 import ru.practicum.service.CompilationService;
 import ru.practicum.service.EventService;
 import ru.practicum.service.UserService;
@@ -41,6 +44,7 @@ public class AdminController {
   private final CategoryService categoryService;
   private final CompilationService compilationService;
   private final EventService eventService;
+  private final CommentService commentService;
 
   @PostMapping("/users")
   @ResponseStatus(HttpStatus.CREATED)
@@ -149,5 +153,20 @@ public class AdminController {
 
     return eventService.findAllEventsWithFiltersAdmin(
         users, states, categories, rangeStart, rangeEnd, request, pageable);
+  }
+
+  @PatchMapping("/comments/{commentId}")
+  public CommentResponseDto updateComment(
+      @RequestBody @Valid CommentRequestDto commentRequestDto, @PathVariable Long commentId) {
+    log.info("PATCH /admin/comments/{commentId}: commentRequestDto={}, commentId={}", commentRequestDto, commentId);
+
+    return commentService.updateByAdmin(commentRequestDto, commentId);
+  }
+
+  @DeleteMapping("/comments/{commentId}")
+  public ResponseEntity<Object> deleteComment(@PathVariable Long commentId) {
+    log.info("DELETE /admin/comments/{commentId}: commentId={}", commentId);
+
+    return commentService.deleteByAdmin(commentId);
   }
 }
